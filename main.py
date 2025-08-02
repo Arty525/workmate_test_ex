@@ -1,26 +1,14 @@
 import argparse
-import json
 import sys
-
 from tabulate import tabulate
+from src.reports import average
 
-def average():
-    result = {}
 
-    if args.report == 'average':
-        with open(args.file, 'r', encoding='utf-8') as f:
-            for line in f:
-                json_data = json.loads(line)
-                if result.get(json_data['url']) is None:
-                    result[json_data['url']] = {}
-                if result.get(json_data['url']).get('total') is None:
-                    result[json_data['url']]['total'] = 1
-                else:
-                    result[json_data['url']]['total'] = result[json_data['url']]['total'] + 1
-                result[json_data['url']]['avg_response_time'] = json_data['response_time'] / result[json_data['url']]['total']
-
+def table_view(report_data):
+    """Выводит результат отчета в виде таблицы в консоль"""
     table_data = []
-    for handler, stat in result.items():
+
+    for handler, stat in report_data.items():
         row = {"handler": handler}
         row.update(stat)
         table_data.append(row)
@@ -30,20 +18,23 @@ def average():
 
 if __name__ == "__main__":
     try:
-        parser = argparse.ArgumentParser(description='Пример использования argparse')
-        parser.add_argument('--file', help='Файл для обработки')
-        parser.add_argument('--report', help='Тип отчета')
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--file", help="Файл для обработки")
+        parser.add_argument("--report", help="Тип отчета")
 
         args = parser.parse_args()
 
-        reports = ['average',]
+        reports = [
+            "average",
+        ]  # Список доступных отчетов
 
         if args.report not in reports:
-            print(f'Отчета с именем {args.report} не существует')
+            # Если введенный пользователем отчет отсутствует в списке выводим сообщение в консоль
+            print(f"Отчета с именем {args.report} не существует")
             sys.exit(1)
 
-        if args.report == 'average':
-            average()
+        if args.report == "average":
+            table_view(average(args.file))
 
-    except FileNotFoundError as fe:
-        print(f'Файл с именем {args.file} не найден')
+    except FileNotFoundError:
+        print(f"Файл с именем {args.file} не найден")
